@@ -25,11 +25,10 @@ class Game():
         self.setup()
 
         # sprites
-        # Putting the collision sprites at the end of Player makes it an arguement and allows the player to access the group, it isn't in the Collision Sprites group
-        self.player = Player((400,300), self.all_sprites, self.collision_sprites)
 
     def setup(self):
         map = load_pygame(join('.', 'data', 'maps', 'world.tmx'))
+            
         # Creates the collision object for the player to interact with. Didn't have a surface so had to create one with pygame by using the width and height of the collision object
         for obj in map.get_layer_by_name('Collisions'):
             CollisionSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
@@ -41,7 +40,9 @@ class Game():
             CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
 
         for obj in map.get_layer_by_name('Entities'):
-            print(obj)
+            if obj.name == 'Player':
+                # Putting the collision sprites at the end of Player makes it an arguement and allows the player to access the group, it isn't in the Collision Sprites group
+                self.player = Player((obj.x,obj.y), self.all_sprites, self.collision_sprites)
 
     def import_assets(self):
         self.player_surf = [pygame.image.load(join('.', 'images', 'player', 'down', f'{i}.png')).convert_alpha() for i in range(4)]
