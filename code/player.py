@@ -3,14 +3,38 @@ from settings import *
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_sprites):
         super().__init__(groups)
+        self.load_images()
+        self.state, self.frame_index = 'down', 0
         self.image = pygame.image.load(join('.', 'images', 'player', 'down', '0.png')).convert_alpha()
         self.rect = self.image.get_frect(center = pos)
         self.hitbox_rect = self.rect.inflate(-60, -100)
 
-        # movement
+        # Movement
         self.direction = pygame.Vector2()
         self.speed = 500
         self.collision_sprites = collision_sprites
+
+    def load_images(self):
+        self.frames = {
+            'left': [],
+            'right': [],
+            'up': [],
+            'down': [],
+        }
+
+        for state in self.frames.keys():
+            # Loop searches through the folder path using walk and join: current -> images -> player -> then checks for the state, which is equal to the keys of the frames dictionary
+            # The keys in the diction HAVE to have the same names as the sub folders, THIS IS IMPORTANT
+            for folder_path, sub_folders, file_names in walk(join('images', 'player', state)):
+                if file_names:
+                    # Loop sorts through the folders and checks for the file name, if there is a named file in the folder, it converts the string to an int so it can be sorted, then you'd stop reading the file after the '.'.
+                    for file_name in sorted(file_names, key=lambda name: int(name.split('.')[0])):
+                        # Sets full path to be equal to the joining of the folder path and the file name, split on the '.'
+                        full_path = join(folder_path, file_name)
+                        # Creates a surface and loads an image onto it, which is the variable and convered to alpha to remove the excess pixels
+                        surf = pygame.image.load(full_path).convert_alpha()
+                        # Adds the surface to the values in the frames dictionary based upon the state, i.e. 'left' = left sub folder
+                        self.frames[state].append(surf)
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -40,6 +64,21 @@ class Player(pygame.sprite.Sprite):
                     if self.direction.y < 0:
                         self.hitbox_rect.top = sprite.rect.bottom
 
+    def animate(self, dt):
+        # Get the state
+        if self.direction.x != 0:
+            self.state = 'right' if self.direction.x > 0 else 'left'
+        elif self.direction.y != 0:
+            self.state = 'down' if self.direction.y > 0 else 'up'
+        else:
+            self.frame_index = 0
+
+        # Actual animation
+        self.frame_index += 5 * dt
+        # Checks the frames dictionary for the state, grabs the integer value for the index then divides it by the length of the dictionary keys(frames -> state) and gives a remainder
+        self.image = self.frames[self.state][int(self.frame_index) % len(self.frames[self.state])]
+
     def update(self, dt):
+        self.animate(dt)
         self.input()
         self.move(dt)

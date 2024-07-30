@@ -11,20 +11,20 @@ from random import randint
 
 class Game():
     def __init__(self):
-        # main setup
+        # Main setup
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption('Gun Survivor')
         self.clock = pygame.time.Clock()
         self.running = True
 
-        # groups
+        # Groups
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
         self.setup()
 
-        # sprites
+        # Sprites
 
     def setup(self):
         map = load_pygame(join('.', 'data', 'maps', 'world.tmx'))
@@ -51,15 +51,15 @@ class Game():
         while self.running:
             dt = self.clock.tick() / 1000
             
-            # event loop
+            # Event loop
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
 
-            # update
+            # Update
             self.all_sprites.update(dt)
 
-            # drawing
+            # Drawing
             self.display_surface.fill('black')
             # This is causing the display surface to follow the player around, like a camera
             self.all_sprites.draw(self.player.rect.center)
