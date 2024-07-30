@@ -1,4 +1,5 @@
 from settings import *
+from math import atan2, degrees
 
 # When importing an image from tiled, you always want to do the topleft for the position
 class Sprite(pygame.sprite.Sprite):
@@ -13,3 +14,57 @@ class CollisionSprite(pygame.sprite.Sprite):
         super().__init__(groups)
         self.image = surf
         self.rect = self.image.get_frect(topleft = pos)
+
+class Gun(pygame.sprite.Sprite):
+    def __init__(self, player, groups):
+        # Player connection
+        self.player = player
+        self.distance = 140
+        self.player_direction = pygame.Vector2(0,1)
+
+        # Sprite setup
+        super().__init__(groups)
+        self.gun_surface = pygame.image.load(join('.', 'images', 'gun', 'gun.png')).convert_alpha()
+        self.image = self.gun_surface 
+        # Places the gun directly next to the player and uses the same logic in the update in order to update the position of the gun relative to the player
+        self.rect = self.image.get_frect(center = self.player.rect.center + self.player_direction * self.distance)
+
+    def get_direction(self):
+        mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
+        player_pos = pygame.Vector2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)
+        # Gets the vector for the mouse direction by getting the end point(mouse) and subtracting the start point(player)
+        self.player_direction = (mouse_pos - player_pos).normalize()
+
+    def rotate_gun(self):
+        # Atan2 will take the width and the height of a triangle, and return the angle in radians which is then turned into degrees. Subtracting 90 will normalize the angle
+        angle = degrees(atan2(self.player_direction.x, self.player_direction.y)) - 90
+        # Starts the rotation from the original surface
+        if self.player_direction.x > 0:
+            # Rotates the image based on the surface, the angle (expressed with the angle variable) and the scale
+            self.image = pygame.transform.rotozoom(self.gun_surface, angle, 1)
+        else:
+            self.image = pygame.transform.rotozoom(self.gun_surface, abs(angle), 1)
+            # This takes the image from the previous line and flips it on the vertical axis
+            self.image = pygame.transform.flip(self.image, False, True)
+
+    def update(self, _):
+        self.get_direction()
+        self.rotate_gun()
+        self.rect.center = self.player.rect.center + self.player_direction * self.distance
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, surf, pos, direction, groups):
+        super().__init__(groups)
+        self.image = surf
+        self.rect = self.image.get_frect(center = pos)
+        self.start_time = pygame.time.get_ticks()
+        self.lifetime = 1000
+
+        # Movement
+        self.direction = direction
+        self.speed = 1200
+
+    def update(self, dt):
+        self.rect.center += self.direction * self.speed * dt
+        if pygame.time.get_ticks() - self.start_time >= self.lifetime:
+            self.kill()
