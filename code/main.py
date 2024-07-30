@@ -3,6 +3,7 @@ import pygame
 from settings import *
 from player import Player
 from sprites import *
+from groups import AllSprites
 # This imports a TMX map that you can use inside of the code
 from pytmx.util_pygame import load_pygame
 
@@ -18,7 +19,7 @@ class Game():
         self.running = True
 
         # groups
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
         self.setup()
@@ -39,6 +40,9 @@ class Game():
         for obj in map.get_layer_by_name('Objects'):
             CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
 
+        for obj in map.get_layer_by_name('Entities'):
+            print(obj)
+
     def import_assets(self):
         self.player_surf = [pygame.image.load(join('.', 'images', 'player', 'down', f'{i}.png')).convert_alpha() for i in range(4)]
 
@@ -52,11 +56,12 @@ class Game():
                     self.running = False
 
             # update
-            self.display_surface.fill('black')
             self.all_sprites.update(dt)
 
             # drawing
-            self.all_sprites.draw(self.display_surface)
+            self.display_surface.fill('black')
+            # This is causing the display surface to follow the player around, like a camera
+            self.all_sprites.draw(self.player.rect.center)
             pygame.display.update()
 
             # self.clock.tick(60)
