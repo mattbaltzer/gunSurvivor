@@ -31,7 +31,7 @@ class Game():
 
         # Enemy timers
         self.enemy_event = pygame.event.custom_type()
-        pygame.time.set_timer(self.enemy_event, 300)
+        pygame.time.set_timer(self.enemy_event, 100)
         self.spawn_positions = []
 
         # Sound effects/background music
