@@ -17,25 +17,32 @@ class Game():
         pygame.display.set_caption('Gun Survivor')
         self.clock = pygame.time.Clock()
         self.running = True
-        self.load_images()
 
         # Groups
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.bullet_sprites = pygame.sprite.Group()
 
-        self.setup()
-
         # Gun timer
         self.can_shoot = True
         self.shoot_time = 0
         self.gun_cooldown = 100
+
+        # Enemy timers
+        self.enemy_event = pygame.event.custom_type()
+        pygame.time.set_timer(self.enemy_event, 300)
+        self.spawn_positions = []
+
+        # Game setup 
+        self.load_images()
+        self.setup()
 
     def load_images(self):
         self.bullet_surface = pygame.image.load(join('.', 'images', 'gun', 'bullet.png')).convert_alpha()
 
     def input(self):
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
+            # Creates the starting postion for the bullet based off of the guns direction, plus the direction that the player is facing with an arbitrary number as padding
             pos = self.gun.rect.center + self.gun.player_direction * 50
             Bullet(self.bullet_surface, pos, self.gun.player_direction, (self.all_sprites, self.bullet_sprites))
             self.can_shoot = False
@@ -65,6 +72,9 @@ class Game():
                 # Putting the collision sprites at the end of Player makes it an arguement and allows the player to access the group, it isn't in the Collision Sprites group
                 self.player = Player((obj.x,obj.y), self.all_sprites, self.collision_sprites)
                 self.gun = Gun(self.player, self.all_sprites)
+            else:
+                # Setting up the spawn locations for the enemy based on the tmx map that was provided by adding the x and y for the obj to the spawn positions
+                self.spawn_positions.append((obj.x, obj.y))
 
     def import_assets(self):
         self.player_surf = [pygame.image.load(join('.', 'images', 'player', 'down', f'{i}.png')).convert_alpha() for i in range(4)]
@@ -77,6 +87,8 @@ class Game():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                if event.type == self.enemy_event:
+                    print('spawn enemy')
 
             # Update
             pygame.mouse.set_visible(False)

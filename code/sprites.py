@@ -50,6 +50,7 @@ class Gun(pygame.sprite.Sprite):
     def update(self, _):
         self.get_direction()
         self.rotate_gun()
+        # Sets up the guns location in relation to the player that will constantly update. Bases the gun off of the center of the player, plus their direction multiplied by the distance between them
         self.rect.center = self.player.rect.center + self.player_direction * self.distance
 
 class Bullet(pygame.sprite.Sprite):
@@ -65,6 +66,25 @@ class Bullet(pygame.sprite.Sprite):
         self.speed = 1200
 
     def update(self, dt):
+        # Basic logic for the movement of the bullet. Increases the center by the diretion multipled by the speed and delta time in order to create movement
         self.rect.center += self.direction * self.speed * dt
+        # Deletes the bullet sprite after the start time becomes equal or greater than the total life time of the bullet in miliseconds
         if pygame.time.get_ticks() - self.start_time >= self.lifetime:
             self.kill()
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, pos, frames, groups, player, collision_sprites):
+        super().__init__(groups)
+        self.player = player
+
+        # Grabbing the images and setting up the animation speed
+        self.frames, self.frame_index = frames, 0
+        self.images = self.frames[self.frame_index]
+        self.animation_speed = 6
+
+        # Basic enemy rectangle information
+        self.rect = self.image.get_frect(center = pos)
+        self.hitbox_rect = self.rect.inflate(-20, -40)
+        self.collision_sprites = collision_sprites
+        self.direction = pygame.Vector2()
+        self.speed = 400
