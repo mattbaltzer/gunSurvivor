@@ -113,10 +113,10 @@ class Game():
                 # If a bullet collides with an enemy, it will remove the enemy from the active enemy list
                 collision_sprites = pygame.sprite.spritecollide(bullet, self.enemy_sprites, False, pygame.sprite.collide_mask)
                 if collision_sprites:
+                    self.hit_sound.play()
+                    self.hit_sound.set_volume(0.1)
                     for sprite in collision_sprites:
                         sprite.destroy()
-                        self.hit_sound.play()
-                        self.hit_sound.set_volume(0.1)
                     bullet.kill()
 
     def player_collision(self):
