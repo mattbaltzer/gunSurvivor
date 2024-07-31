@@ -7,7 +7,7 @@ from groups import AllSprites
 # This imports a TMX map that you can use inside of the code
 from pytmx.util_pygame import load_pygame
 
-from random import randint
+from random import randint, choice
 
 class Game():
     def __init__(self):
@@ -22,6 +22,7 @@ class Game():
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.bullet_sprites = pygame.sprite.Group()
+        self.enemy_sprites = pygame.sprite.Group()
 
         # Gun timer
         self.can_shoot = True
@@ -39,6 +40,24 @@ class Game():
 
     def load_images(self):
         self.bullet_surface = pygame.image.load(join('.', 'images', 'gun', 'bullet.png')).convert_alpha()
+
+        # This sets up a list of the folders associated with the enemies, it grabs the first list printed out since there are no files to grab
+        folders = list(walk(join('.', 'images', 'enemies')))[0][1]
+        self.enemy_frames = {}
+        for folder in folders:
+            # Loop searches through the folder path using walk and join: current -> images -> enemies -> then checks for the folder which holds each enemies individual frames
+            for folder_path, _, file_names in walk(join('.', 'images', 'enemies', folder)):
+                # Sets the dictionary with the folder key to an empty list
+                self.enemy_frames[folder] = []
+                # This searches through the folders for the specific file names, splits them on the '.' and then converts the string that is returned into an integer to be used in the loop
+                for file_name in sorted(file_names, key = lambda name: int(name.split('.')[0])):
+                    # Sets the full path to the joint value of the folder path and the file name
+                    full_path = join(folder_path, file_name)
+                    # Creates a surface which has the image contained in the previous variable and converts it to an alpha to remove the spare pixels
+                    surf = pygame.image.load(full_path).convert_alpha()
+                    # Adds the new image to the values in the frames dictionary based upon the folder  
+                    self.enemy_frames[folder].append(surf)
+                    
 
     def input(self):
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
@@ -88,7 +107,8 @@ class Game():
                 if event.type == pygame.QUIT:
                     self.running = False
                 if event.type == self.enemy_event:
-                    print('spawn enemy')
+                    # Choice cannot grab values directly, it has to be taken from a list
+                    Enemy(choice(self.spawn_positions), choice(list(self.enemy_frames.values())), (self.all_sprites, self.enemy_sprites), self.player, self.collision_sprites)
 
             # Update
             pygame.mouse.set_visible(False)
