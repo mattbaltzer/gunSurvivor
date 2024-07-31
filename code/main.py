@@ -34,6 +34,14 @@ class Game():
         pygame.time.set_timer(self.enemy_event, 300)
         self.spawn_positions = []
 
+        # Sound effects/background music
+        self.hit_sound = pygame.mixer.Sound(join('audio', 'impact.ogg'))
+        self.shoot_sound = pygame.mixer.Sound(join('audio', 'shoot.wav'))
+        bg_music = pygame.mixer.Sound(join('audio', 'music.wav'))
+        bg_music.set_volume(0.04)
+        # Setting the music to a loop of -1 will have it loop indefinitely
+        bg_music.play(loops = -1)
+
         # Game setup 
         self.load_images()
         self.setup()
@@ -58,7 +66,6 @@ class Game():
                     # Adds the new image to the values in the frames dictionary based upon the folder  
                     self.enemy_frames[folder].append(surf)
                     
-
     def input(self):
         if pygame.mouse.get_pressed()[0] and self.can_shoot:
             # Creates the starting postion for the bullet based off of the guns direction, plus the direction that the player is facing with an arbitrary number as padding
@@ -66,13 +73,15 @@ class Game():
             Bullet(self.bullet_surface, pos, self.gun.player_direction, (self.all_sprites, self.bullet_sprites))
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()
+            self.shoot_sound.play()
+            self.shoot_sound.set_volume(0.02)
 
     def gun_timer(self):
         if not self.can_shoot:
             current_time = pygame.time.get_ticks()
             if current_time - self.shoot_time >= self.gun_cooldown:
                 self.can_shoot = True
-
+                
     def setup(self):
         map = load_pygame(join('.', 'data', 'maps', 'world.tmx'))
             
@@ -98,6 +107,22 @@ class Game():
     def import_assets(self):
         self.player_surf = [pygame.image.load(join('.', 'images', 'player', 'down', f'{i}.png')).convert_alpha() for i in range(4)]
 
+    def bullet_collision(self):
+        if self.bullet_sprites:
+            for bullet in self.bullet_sprites:
+                # If a bullet collides with an enemy, it will remove the enemy from the active enemy list
+                collision_sprites = pygame.sprite.spritecollide(bullet, self.enemy_sprites, False, pygame.sprite.collide_mask)
+                if collision_sprites:
+                    for sprite in collision_sprites:
+                        sprite.destroy()
+                        self.hit_sound.play()
+                        self.hit_sound.set_volume(0.1)
+                    bullet.kill()
+
+    def player_collision(self):
+        if pygame.sprite.spritecollide(self.player, self.enemy_sprites, False, pygame.sprite.collide_mask):
+            self.running = False
+
     def run(self):
         while self.running:
             dt = self.clock.tick() / 1000
@@ -115,6 +140,8 @@ class Game():
             self.gun_timer()
             self.input()
             self.all_sprites.update(dt)
+            self.bullet_collision()
+            self.player_collision()
 
             # Drawing
             self.display_surface.fill('black')
